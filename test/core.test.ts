@@ -64,9 +64,8 @@ describe('seed codes', () => {
     const c = code(42);
     expect(parseSeedCode(c.slice(0, 12)).settings).toEqual(DEFAULT_SETTINGS); // custom's C and 54 seed bits only (11 characters)
   });
-  it('a preset is a short code (its letter and the seed, no options); anything else is custom (C) with every option', () => {
+  it('a preset is a short code (its letter and the seed, no options; Vanilla just VANILLA); anything else is custom (C) with every option', () => {
     for (const [letter, settings] of [
-      ['V', VANILLA_SETTINGS],
       ['S', DEFAULT_SETTINGS],
       ['R', IRON_SETTINGS],
       ['B', BRUTE_SETTINGS],
@@ -76,6 +75,10 @@ describe('seed codes', () => {
       expect(parseSeedCode(c)).toEqual({ settings: normalizeSettings(settings), seed: 12345n });
       expect(parseSeedCode(c.toLowerCase()).seed).toBe(12345n);
     }
+    // (Vanilla has nothing random: one code, and the V + seed form still reads)
+    expect(makeSeedCode(VANILLA_SETTINGS, 12345n)).toBe('VANILLA');
+    expect(parseSeedCode('vanilla')).toEqual({ settings: normalizeSettings(VANILLA_SETTINGS), seed: 0n });
+    expect(parseSeedCode('VAAAAAAAAAAC').settings).toEqual(normalizeSettings(VANILLA_SETTINGS));
     const custom = makeSeedCode({ ...BRUTE_SETTINGS, mapSpeed: '2' }, 12345n);
     expect(custom).toMatch(/^C/);
     expect(custom.length).toBeGreaterThan(12);

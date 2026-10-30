@@ -564,6 +564,8 @@ function randomSettings(): Settings {
 const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const CHAR_BITS = 5;
 const SEED_BITS = 54;
+/** Vanilla's code: nothing in it is random, so there is just the one (the V + seed form still reads as Vanilla). */
+export const VANILLA_CODE = 'VANILLA';
 const bitsFor = (n: number) => Math.max(1, Math.ceil(Math.log2(n)));
 
 /** Fill missing options with defaults; reject unknown keys/values. */
@@ -588,6 +590,7 @@ export function makeSeedCode(settings: Settings, seed: bigint): string {
   if (seed < 0n || seed >= 1n << BigInt(SEED_BITS)) throw new Error('seed out of range');
   let bits = seed.toString(2).padStart(SEED_BITS, '0');
   const preset = presetOf(s);
+  if (preset?.[2] === VANILLA_SETTINGS) return VANILLA_CODE;
   if (!preset)
     for (const o of GAMEPLAY_SCHEMA)
       bits += encodeIndex(o, o.values.indexOf(s[o.key])).toString(2).padStart(bitsFor(o.values.length), '0');
@@ -611,6 +614,7 @@ export function newSeedCode(settings: Settings = DEFAULT_SETTINGS): string {
 export function parseSeedCode(code: string): { settings: Settings; seed: bigint } {
   const c = code.trim().toUpperCase();
   const bad = () => new Error(`Not a valid seed code: "${code}"`);
+  if (c === VANILLA_CODE) return { settings: { ...VANILLA_SETTINGS }, seed: 0n };
   const preset = PRESETS.find(([, letter]) => letter === c[0]);
   if (!preset && c[0] !== CUSTOM_CODE) throw bad();
   let bits = '';

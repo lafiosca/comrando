@@ -88,6 +88,12 @@ main {
   color: var(--muted);
   max-width: 56ch;
 }
+.tagline + .tagline {
+  margin-top: 10px;
+}
+.tagline a {
+  color: var(--accent);
+}
 
 /* --- cards --- */
 .card {
@@ -912,6 +918,18 @@ footer {
   color: var(--muted);
   font-size: 0.8rem;
   text-align: center;
+}
+footer .footer-links {
+  margin: 0 0 8px;
+  font-size: 0.9rem;
+}
+footer a {
+  color: var(--accent);
+  text-decoration: none;
+}
+footer a:hover,
+footer a:focus-visible {
+  text-decoration: underline;
 }
 
 @media (max-width: 520px) {

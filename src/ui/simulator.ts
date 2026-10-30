@@ -676,7 +676,9 @@ export function openSimulator(seedCode: string, rom: Uint8Array, make: () => Sim
       l.note === 'static'
         ? "Static: not this area's communicator."
         : l.note === 'impostor'
-          ? 'An impostor! A trap (3 HP in the game).'
+          ? seed.destroyerTrap
+            ? 'An impostor! A trap (3 HP in the game).'
+            : 'An impostor: no gun this visit.'
           : l.note === 'flareless'
             ? 'Cleared in the dark, without the Flare.'
             : '';

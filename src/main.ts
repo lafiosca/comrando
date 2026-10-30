@@ -27,6 +27,7 @@ import {
   blockers,
   chaosSettings,
   inertOptions,
+  VANILLA_CODE,
   VANILLA_SETTINGS,
 } from './core/settings.ts';
 
@@ -272,6 +273,10 @@ function refreshOption(key: string) {
 function setSeed(code: string) {
   if (seedInput.value !== code) hideSpoiler(); // (another seed: its spoiler stays hidden until asked for)
   seedInput.value = code;
+  // (Vanilla: nothing to roll)
+  const reseed = $('reseed') as HTMLButtonElement;
+  reseed.disabled = code === VANILLA_CODE;
+  reseed.title = reseed.disabled ? 'Vanilla has nothing random to roll' : 'Roll a new seed (keeps the options)';
   const url = new URL(location.href);
   url.searchParams.delete('v');
   url.searchParams.delete('seed');
@@ -304,12 +309,13 @@ function applyMoot() {
 }
 function optionsChanged() {
   applyMoot();
-  // keep the random part, re-encode the options (or roll a new seed if the box holds an invalid code)
-  let seed: bigint;
+  // keep the random part, re-encode the options (or roll a new seed if the box holds an invalid code, or Vanilla's,
+  // which has no random part)
+  let seed = randomSeedValue();
   try {
-    seed = parseSeedCode(seedInput.value).seed;
+    if (seedInput.value.trim().toUpperCase() !== VANILLA_CODE) seed = parseSeedCode(seedInput.value).seed;
   } catch {
-    seed = randomSeedValue();
+    // (keep the new one)
   }
   setSeed(makeSeedCode(currentGameplay(), seed));
   setStatus(seedStatus, '');

@@ -1,0 +1,16 @@
+name: Idea
+description: A new option, a change to the logic or hints, or a better page.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: The idea
+      description: What you'd like, and why it would make runs better.
+    validations:
+      required: true
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else
+      description: Examples, other randomizers that do it, screenshots.

@@ -1,0 +1,44 @@
+name: Bug report
+description: Something broke, a hint misled you, a seed got stuck, or the page misbehaved.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting! Screenshots are welcome, but **please don't upload or link your ROM** (or a
+        generated one): the seed link is all it takes to make the same game.
+  - type: input
+    id: seed
+    attributes:
+      label: Seed link
+      description: >-
+        Copy Link on the page after generating (it carries the version and the seed code). Or the SEED and VERSION
+        lines from the final screen.
+      placeholder: https://comrando.com/?v=0.24.1&seed=...
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What went wrong, and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: where
+    attributes:
+      label: Where and how
+      description: >-
+        The area or neutral zone (map number), what you had collected, and the steps that lead to it, if you know them.
+  - type: input
+    id: emulator
+    attributes:
+      label: Emulator or hardware
+      placeholder: Mesen 2, FCEUX 2.6, NES with an EverDrive, ...
+  - type: textarea
+    id: extra
+    attributes:
+      label: Screenshots, video or anything else
+      description: >-
+        Screenshots of the bug, if it's something you can see: drag them in here. Spoiler text or a simulator log
+        helps too. No ROM files, please.

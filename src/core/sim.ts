@@ -123,6 +123,8 @@ export interface SimSeed {
   /** The impostors' names (a mole fact names one by index) and the real one's. */
   moles: string[];
   realDestroyer: string;
+  /** An impostor's YES is a trap (Destroyers shuffled); in the original it only spoils the gun for that visit. */
+  destroyerTrap: boolean;
   /** The men say their names (not with Nonsense hints: they go by where they stand). */
   namedDestroyers: boolean;
   rescueTells?: { comm: Item; trust: boolean };
@@ -373,8 +375,9 @@ export function buildSim(input: SimInput): SimSeed {
     }
     // the three men outside the Destroyers' rooms: YES to the real one pays out the rooms' item
     if ([...doors].some(([room, d]) => DESTROYER_ROOMS.includes(room) && d.zone === zoneRoom)) {
-      const names = input.destroyers?.names ?? ['DESTROYER-1', 'DESTROYER-2', 'DESTROYER-3'],
-        real = input.destroyers?.real ?? 2;
+      // (vanilla, by slot: the real DESTROYER-3 right of door B, DESTROYER-1 by door A, DESTROYER-2 left of door B)
+      const names = input.destroyers?.names ?? ['DESTROYER-3', 'DESTROYER-1', 'DESTROYER-2'],
+        real = input.destroyers?.real ?? 0;
       const impostor = [6, 7]; // (the impostors' scripts, in position order: destroyers.ts applyDestroyers)
       names.forEach((name, i) => {
         const script = i === real ? 4 : impostor.shift()!;
@@ -422,6 +425,7 @@ export function buildSim(input: SimInput): SimSeed {
     briefing: BRIEFING_Y.map(messageForY).filter((m) => (readMessage(rom, m)?.text ?? '').trim()),
     moles: input.destroyers ? input.destroyers.names.filter((_, i) => i !== input.destroyers!.real) : [],
     realDestroyer: realName,
+    destroyerTrap: !!input.destroyers,
     namedDestroyers: input.namedDestroyers,
     ...(input.rescueTells && { rescueTells: input.rescueTells }),
   };
