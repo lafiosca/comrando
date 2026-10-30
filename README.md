@@ -57,9 +57,9 @@ a refactor should leave every generated ROM and spoiler unchanged.
 
 ## How this was made
 
-This randomizer was written almost entirely by an AI coding assistant (Anthropic's Claude, through Claude Code),
-directed, play-tested and reviewed by its maintainer. The code, comments and docs reflect that: please judge them on
-their own merits, and report what's wrong.
+This randomizer was designed by @lafiosca and implemented by Claude Code. The code, comments, and documentation reflect
+that and are not necessarily intended for human consumption. This repo is provided primarily as a public archive and
+issue tracker.
 
 ## Legal
 
