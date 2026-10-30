@@ -1,0 +1,60 @@
+{
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "files": {
+    "includes": ["src/**", "test/**", "scripts/**", "*.ts", "!src/core/robotart.ts"]
+  },
+  "formatter": {
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 120
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "single",
+      "trailingCommas": "all",
+      "semicolons": "always",
+      "arrowParentheses": "always"
+    }
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "preset": "recommended",
+      "style": {
+        "noNonNullAssertion": "off",
+        "noDescendingSpecificity": "off"
+      },
+      "complexity": {
+        "useSimpleNumberKeys": "off",
+        "noImportantStyles": "off"
+      },
+      "suspicious": {
+        "useIterableCallbackReturn": "off"
+      }
+    }
+  },
+  "assist": {
+    "enabled": false
+  },
+  "overrides": [
+    {
+      "includes": [
+        "src/core/patches/**",
+        "src/core/gatedisplay.ts",
+        "src/core/mapmarkers.ts",
+        "src/core/timer.ts",
+        "src/core/pickups.ts",
+        "src/core/finalscreen.ts",
+        "src/core/clearscreen.ts",
+        "src/core/ending.ts",
+        "src/core/roomtalk.ts",
+        "src/core/robotportrait.ts",
+        "src/core/printer.ts",
+        "src/core/doorpanels.ts"
+      ],
+      "formatter": {
+        "enabled": false
+      }
+    }
+  ]
+}

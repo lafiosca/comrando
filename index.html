@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bionic Comrando</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon.png" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  </head>
+  <body>
+    <main>
+      <header class="hero">
+        <h1 id="title"><img id="logo" src="/logo.png" width="170" height="111" alt="Bionic Comrando" /><span id="logo-version"></span></h1>
+        <p class="tagline">A logic-based randomizer for <em>Bionic Commando</em> (NES, USA). Bring your own ROM and get back a randomized ROM to play in your emulator of choice. Your ROM never leaves your computer.</p>
+      </header>
+
+      <section class="card">
+        <div class="card-head"><span class="step">01</span><h2>ROM</h2></div>
+        <label class="drop" id="drop">
+          <input id="rom" type="file" accept=".zip,.nes,.unh,.bin" />
+          <svg class="drop-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h14v14l-2 4H7l-2-4z" /><path d="M8 7h8M8 10h8M9 17h6" /></svg>
+          <span class="drop-text"><strong>Choose your ROM</strong> or drop it here</span>
+          <span class="drop-sub">No-Intro “Bionic Commando (USA)”, as .nes or .zip</span>
+        </label>
+        <div class="row rom-row">
+          <p id="rom-status" class="status"></p>
+          <button id="forget-rom" class="ghost small" type="button" hidden>Forget ROM</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-head"><span class="step">02</span><h2>Seed &amp; options</h2></div>
+        <p class="hint">The seed code carries every gameplay option: share it and others get the same game.</p>
+        <div class="seed-row">
+          <button id="reseed" type="button" title="Roll a new seed (keeps the options)">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3" /><circle cx="9" cy="9" r="1.3" /><circle cx="15" cy="15" r="1.3" /><circle cx="15" cy="9" r="1.3" /><circle cx="9" cy="15" r="1.3" /></svg>
+            Reroll Seed
+          </button>
+          <input id="seed" type="text" spellcheck="false" autocomplete="off" aria-label="Seed code" />
+          <button id="copy-seed" class="copy" type="button" title="Copy the seed code">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2" /><path d="M5 15V6a2 2 0 0 1 2-2h8" /></svg>
+            <span>Copy Seed</span>
+          </button>
+        </div>
+        <p id="seed-status" class="status"></p>
+        <div class="presets">
+          <div class="presets-head"><span class="presets-label">Presets</span></div>
+          <div class="presets-buttons">
+            <button id="preset-vanilla" class="small" type="button" title="No changes to the original game">Vanilla</button>
+            <button id="preset-standard" class="small" type="button" title="Recommended default game options">Standard</button>
+            <button id="preset-iron" class="small" type="button" title="A longer, more difficult run">Iron</button>
+            <button id="preset-brute" class="small" type="button" title="Grueling run without hints or continues">Brute</button>
+            <button id="preset-chaos" class="small" type="button" title="Every game option chosen randomly">Chaos</button>
+          </div>
+        </div>
+        <div id="gameplay"></div>
+      </section>
+
+      <section class="card">
+        <div class="card-head"><span class="step">03</span><h2>Looks</h2></div>
+        <p class="hint">Cosmetic only: not part of the seed code.</p>
+        <div class="looks">
+          <div class="opt"><div class="opt-head"><span class="opt-label">Uniform</span></div><div class="colorpick" id="uniform"></div></div>
+          <div class="opt"><div class="opt-head"><span class="opt-label">Hair</span></div><div class="colorpick" id="hair"></div></div>
+          <div class="opt"><div class="opt-head"><span class="opt-label">Enemy Uniform</span></div><div class="colorpick" id="enemy"></div></div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-head"><span class="step">04</span><h2>Generate</h2></div>
+        <button id="generate" type="button" disabled>Generate ROM</button>
+        <p id="gen-status" class="status"></p>
+        <div id="result" hidden>
+          <div class="seed-row">
+            <input id="share" type="text" readonly aria-label="Share link" />
+            <button id="copy" class="copy" type="button" title="Copy a link to this seed">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1" /><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" /></svg>
+              <span>Copy Link</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section class="card" id="spoiler-card">
+        <div class="card-head"><span class="step">05</span><h2>Spoiler</h2></div>
+        <button id="spoiler-show" type="button" aria-expanded="false" disabled>View Spoiler</button>
+        <p id="spoiler-status" class="status"></p>
+        <div id="spoiler-body" hidden>
+          <details class="spoiler" open>
+            <summary>Routing Spoiler <span class="warn">spoilers</span></summary>
+            <div class="route-tools">
+              <button id="route-expand" class="ghost small" type="button">Expand all</button>
+              <button id="route-collapse" class="ghost small" type="button">Collapse all</button>
+              <div class="select route-mode">
+                <select id="route-mode" aria-label="Route">
+                  <option value="full">Full Route</option>
+                  <option value="abridged">Abridged Route</option>
+                  <option value="oracle">Oracle Route</option>
+                </select>
+              </div>
+            </div>
+            <ol id="route"></ol>
+          </details>
+          <details class="spoiler">
+            <summary>Seed Spoiler <span class="warn">spoilers</span></summary>
+            <div class="row spoiler-dl-row"><button id="spoiler-dl" class="ghost small" type="button">Download spoiler (.json)</button></div>
+            <pre id="spoiler"></pre>
+          </details>
+        </div>
+      </section>
+
+      <section class="card" id="sim-card">
+        <div class="card-head"><span class="step">06</span><h2>Simulator</h2></div>
+        <button id="sim-open" type="button" disabled>Open Simulator</button>
+        <p id="sim-status" class="status"></p>
+      </section>
+
+      <footer>Bionic Comrando is a fan project, not affiliated with Capcom.<br />AI disclosure: this project was developed with Claude Code.</footer>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

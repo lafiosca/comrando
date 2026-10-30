@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.yarn/
+.vitest/
+*.nes
+*.NES
+*.zip
+*.mp4
+DIALOGUE.md
