@@ -15,13 +15,17 @@ export function download(name: string, data: BlobPart, type: string) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-/** Copy text (the clipboard API, or a selection copy where it's missing); true when it worked. */
-export async function copyText(text: string, from: HTMLInputElement): Promise<boolean> {
+/** Copy text (the clipboard API, or a selection copy where it's missing: from `from`, or a box made for it); true when
+ * it worked. */
+export async function copyText(text: string, from?: HTMLInputElement): Promise<boolean> {
   try {
     await navigator.clipboard.writeText(text);
     return true;
   } catch {
-    from.select();
-    return document.execCommand('copy');
+    const box = from ?? document.body.appendChild(Object.assign(document.createElement('textarea'), { value: text }));
+    box.select();
+    const ok = document.execCommand('copy');
+    if (!from) box.remove();
+    return ok;
   }
 }

@@ -261,11 +261,6 @@ input[type="text"] {
 #reseed:hover:not(:disabled) {
   filter: brightness(1.08);
 }
-#share {
-  font-size: 0.85rem;
-  letter-spacing: 0;
-  font-weight: 500;
-}
 
 /* ROM drop zone */
 .drop {
@@ -734,14 +729,55 @@ button.info:hover:not(:disabled),
   opacity: 0.4;
   cursor: not-allowed;
 }
-#result {
+#recent {
   margin-top: 16px;
-  display: grid;
-  gap: 10px;
 }
-#result .row {
+#recent h3 {
+  margin: 0 0 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+.recent-list {
   margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 6px;
 }
+.recent-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-2);
+}
+.recent-list li > div {
+  flex: 1 1 16rem; /* (narrow: the buttons go below, the code stays whole) */
+  min-width: 0;
+  display: grid;
+}
+.recent-code {
+  font-family: var(--mono);
+  font-weight: 700;
+  letter-spacing: 1px;
+  overflow-wrap: anywhere;
+}
+.recent-meta {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+.recent-list button {
+  flex: none;
+  white-space: nowrap;
+}
+.recent-list button:last-child {
+  width: 6.5rem;
+  justify-content: center;
+} /* (fixed width: "Copied!" doesn't move anything) */
 .spoiler {
   border: 1px solid var(--line);
   border-radius: 10px;

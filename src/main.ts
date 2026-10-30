@@ -23,6 +23,7 @@ import {
   newSeedCode,
   parseSeedCode,
   randomSeedValue,
+  runStyle,
   type Settings,
   blockers,
   chaosSettings,
@@ -41,8 +42,8 @@ const hairBox = $('hair');
 const enemyBox = $('enemy');
 const genButton = $<HTMLButtonElement>('generate');
 const genStatus = $('gen-status');
-const result = $('result');
-const shareInput = $<HTMLInputElement>('share');
+const recent = $('recent'),
+  recentList = $('recent-list');
 const spoilerPre = $('spoiler');
 const spoilerBody = $('spoiler-body'),
   spoilerShow = $<HTMLButtonElement>('spoiler-show'),
@@ -60,6 +61,11 @@ simOpen.addEventListener('click', () => {
     setStatus($('sim-status'), (e as Error).message, 'error');
   }
 });
+/** This browser's memory (localStorage): the last seed code shown (its options come back on a reload), and the ROMs
+ * generated lately. */
+const SEED_KEY = 'bc-rando:seed';
+const RECENT_KEY = 'bc-rando:recent';
+const RECENT_MAX = 5;
 const VERSION_PAGE = /v\/[^/]+\/(index\.html)?$/;
 /** The site's root path (a version's own page sits at v/<version>/ under it). */
 const siteRoot = () => location.pathname.replace(VERSION_PAGE, '');
@@ -283,7 +289,7 @@ function refreshOption(key: string) {
   const i = o.values.indexOf(c.get());
   c.mod.hidden = o.values[i] === baseline.settings[key] || mootSaved.has(key); // (none on disabled options)
 }
-/** Show a seed code in the box and in the address bar (so a refresh or a bookmark keeps it). */
+/** Show a seed code in the box, and remember it in this browser (a reload keeps its options, with a new seed). */
 function setSeed(code: string) {
   if (seedInput.value !== code) hideSpoiler(); // (another seed: its spoiler stays hidden until asked for)
   seedInput.value = code;
@@ -291,12 +297,11 @@ function setSeed(code: string) {
   const reseed = $('reseed') as HTMLButtonElement;
   reseed.disabled = code === VANILLA_CODE;
   reseed.title = reseed.disabled ? 'Vanilla has nothing random to roll' : 'Roll a new seed (keeps the options)';
-  // (the seed only: a reload stays on this page's version, the latest at the root, the path's under v/. A shared link
-  // names the version too, seedLink)
-  const url = new URL(location.href);
-  url.searchParams.delete('v');
-  url.searchParams.set('seed', code);
-  history.replaceState(null, '', url);
+  try {
+    localStorage.setItem(SEED_KEY, code);
+  } catch {
+    // not remembered
+  }
   ($('old-version-link') as HTMLAnchorElement).href = `${siteRoot()}?seed=${encodeURIComponent(code)}`;
 }
 /** Options the rest make moot (settings.ts `inertOptions`) show their vanilla value, disabled; the value they had comes
@@ -415,8 +420,12 @@ function matchPreset() {
   setBaseline(found?.[1] ?? 'Standard', found?.[2] ?? DEFAULT_SETTINGS);
   selectPreset(found?.[0] ?? null);
 }
+// A seed link (?v=…&seed=…) opens on its seed; the address bar is then left plain (the page never writes the seed
+// there: a reload starts afresh, below, and Copy Link makes a link). Otherwise the last options used in this browser,
+// with a new seed, or Standard.
 const fromUrl = new URLSearchParams(location.search).get('seed'),
   linkVersion = new URLSearchParams(location.search).get('v');
+if (location.search) history.replaceState(null, '', location.pathname + location.hash);
 if (fromUrl && loadSeedCode(fromUrl)) {
   matchPreset();
   // (a link from another line of versions: the same code may make a different ROM here. A released one opens its
@@ -430,10 +439,21 @@ if (fromUrl && loadSeedCode(fromUrl)) {
       'error',
     );
   }
-} else {
+} else if (!rememberedOptions()) {
   setSeed(newSeedCode(currentGameplay()));
   selectPreset('preset-standard');
-} // (a fresh page: the defaults)
+}
+/** Load the options last used in this browser, with a new seed (Vanilla's code stays VANILLA). */
+function rememberedOptions(): boolean {
+  try {
+    const code = localStorage.getItem(SEED_KEY);
+    if (!code || !loadSeedCode(makeSeedCode(parseSeedCode(code).settings, randomSeedValue()))) return false;
+    matchPreset();
+    return true;
+  } catch {
+    return false; // (nothing remembered, or a code this version can't read)
+  }
+}
 seedInput.addEventListener('change', () => {
   if (loadSeedCode(seedInput.value)) matchPreset();
   else selectPreset(null);
@@ -579,15 +599,78 @@ loadSavedRom();
 
 // --- generate ---
 
-/** The last ROM generated, remembered so a refresh on its seed shows its share link again. */
-const RESULT_KEY = 'bc-rando:last-result';
-interface SavedResult {
+/** The last few ROMs generated in this browser, newest first: each one's seed can be loaded again or linked. */
+interface RecentRom {
   seedCode: string;
-  name: string;
+  version: string;
+  /** When it was generated (ms). */
+  at: number;
 }
-function showResult(r: SavedResult) {
-  shareInput.value = seedLink(r.seedCode);
-  result.hidden = false;
+function recentRoms(): RecentRom[] {
+  try {
+    const list = JSON.parse(localStorage.getItem(RECENT_KEY) ?? '[]');
+    return Array.isArray(list)
+      ? list.filter((r) => typeof r?.seedCode === 'string' && typeof r?.version === 'string')
+      : [];
+  } catch {
+    return [];
+  }
+}
+function rememberRom(seedCode: string) {
+  const list = [
+    { seedCode, version: GENERATOR_VERSION, at: Date.now() },
+    ...recentRoms().filter((r) => r.seedCode !== seedCode || r.version !== GENERATOR_VERSION),
+  ].slice(0, RECENT_MAX);
+  try {
+    localStorage.setItem(RECENT_KEY, JSON.stringify(list));
+  } catch {
+    // not remembered
+  }
+  showRecent(list);
+}
+/** "Standard", "Custom", …: the run style of a code, if this version reads it. */
+function styleOf(code: string) {
+  try {
+    const style = runStyle(parseSeedCode(code).settings);
+    return style[0] + style.slice(1).toLowerCase();
+  } catch {
+    return '';
+  }
+}
+function showRecent(list = recentRoms()) {
+  recentList.replaceChildren(
+    ...list.map((r) => {
+      const li = document.createElement('li'),
+        code = Object.assign(document.createElement('span'), { className: 'recent-code', textContent: r.seedCode }),
+        when = new Date(r.at).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }),
+        meta = Object.assign(document.createElement('span'), {
+          className: 'recent-meta',
+          textContent: [`v${r.version}`, styleOf(r.seedCode), when].filter(Boolean).join(' · '),
+        }),
+        load = Object.assign(document.createElement('button'), {
+          type: 'button',
+          className: 'small',
+          textContent: 'Load',
+          title: 'Put this seed (and its options) back in the seed box',
+        }),
+        copy = Object.assign(document.createElement('button'), { type: 'button', className: 'small' });
+      copy.append(Object.assign(document.createElement('span'), { textContent: 'Copy Link' }));
+      // (another line of versions: its own page makes this seed's game; the link takes it there)
+      load.addEventListener('click', () => {
+        if (lineOf(r.version) !== lineOf(GENERATOR_VERSION)) location.assign(seedLink(r.seedCode, r.version));
+        else if (loadSeedCode(r.seedCode)) {
+          matchPreset();
+          seedInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      });
+      copyButton(copy, () => seedLink(r.seedCode, r.version));
+      const text = document.createElement('div');
+      text.append(code, meta);
+      li.append(text, load, copy);
+      return li;
+    }),
+  );
+  recent.hidden = !list.length;
 }
 
 // --- spoiler: made for the seed entered, on request (no ROM download; it takes the ROM, as the hints are fitted to
@@ -671,28 +754,19 @@ genButton.addEventListener('click', async () => {
     const name = `${base}.zip`;
     const zip = await makeZip([{ name: `${base}.nes`, data: out }]);
     download(name, zip.slice().buffer, 'application/zip');
-    const saved: SavedResult = { seedCode: spoiler.seedCode, name };
-    showResult(saved);
+    rememberRom(spoiler.seedCode);
     fillSpoiler(spoiler);
     hideSpoiler();
-    try {
-      localStorage.setItem(RESULT_KEY, JSON.stringify(saved));
-    } catch {
-      /* not remembered */
-    }
     setStatus(genStatus, `Downloaded ${name}`, 'ok');
   } catch (e) {
     setStatus(genStatus, (e as Error).message, 'error');
   }
 });
+showRecent();
 try {
-  const saved = JSON.parse(localStorage.getItem(RESULT_KEY) ?? 'null') as SavedResult | null;
-  if (saved && saved.seedCode === seedInput.value) {
-    showResult(saved);
-    setStatus(genStatus, `Generated earlier: ${saved.name.replace('.spoiler.json', '.zip')}`);
-  }
+  localStorage.removeItem('bc-rando:last-result'); // (the single last ROM, before the list)
 } catch {
-  // nothing remembered
+  // nothing to tidy
 }
 /** Every released version stays online at v/<version>/ (versions.json at the site's root lists them): a link made by
  * another line of versions opens the newest page of that line, where its seed code makes the same game it did. */
@@ -704,15 +778,15 @@ function openLinkVersion(version: string, seed: string) {
       location.replace(`${pageOf(versions, target)}?v=${encodeURIComponent(target)}&seed=${encodeURIComponent(seed)}`);
   });
 }
-/** A link that opens the page on this seed code, with the generator version that makes its ROM. (A declaration: the remembered result is shown before this point.) */
-function seedLink(code: string) {
+/** A link that opens the page on this seed code, with the generator version that makes its ROM. (A declaration: the
+ * remembered ROMs are shown before this point.) */
+function seedLink(code: string, version = GENERATOR_VERSION) {
   // (a version's own page: links from the root, which sends them to their version)
-  return `${location.origin}${siteRoot()}?v=${encodeURIComponent(GENERATOR_VERSION)}&seed=${encodeURIComponent(code)}`;
+  return `${location.origin}${siteRoot()}?v=${encodeURIComponent(version)}&seed=${encodeURIComponent(code)}`;
 }
 /** A copy button: copies `text()` and says so on its label for a moment. */
-function copyButton(id: string, text: () => string, from: HTMLInputElement) {
-  const button = $(id),
-    label = button.querySelector('span')!,
+function copyButton(button: HTMLElement, text: () => string, from?: HTMLInputElement) {
+  const label = button.querySelector('span')!,
     idle = label.textContent!;
   let timer = 0;
   button.addEventListener('click', async () => {
@@ -723,8 +797,7 @@ function copyButton(id: string, text: () => string, from: HTMLInputElement) {
     }, 1500);
   });
 }
-copyButton('copy-seed', () => seedInput.value, seedInput);
-copyButton('copy', () => shareInput.value, shareInput);
+copyButton($('copy-seed'), () => seedInput.value, seedInput);
 
 // --- an older version's own page: a newer patch of its line takes over; an older line says so, with the latest ---
 if (VERSION_PAGE.test(location.pathname)) {
