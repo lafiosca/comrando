@@ -22,8 +22,9 @@ always make the same game, byte for byte, in the browser or the CLI. Each featur
 stream (`stream('zones')`, `stream('hints')`, …) so that adding a feature doesn't reshuffle the others. Cosmetic
 options (colors) are not in the seed code and use a separate random stream; they never affect gameplay.
 
-Releases are versioned (`GENERATOR_VERSION` in `generate.ts`). A version change may change what a seed code makes,
-which is why the site keeps every released version online.
+Releases are versioned (`GENERATOR_VERSION` in `generate.ts`). A minor or major version may change what a seed code
+makes, which is why the site keeps every released version online. A patch version never does (only the page around
+it changes): the site sends a link or page of an older patch to the newest patch of its line (`main.ts`).
 
 ## From seed code to ROM
 

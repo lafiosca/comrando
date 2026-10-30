@@ -60,6 +60,20 @@ simOpen.addEventListener('click', () => {
     setStatus($('sim-status'), (e as Error).message, 'error');
   }
 });
+const VERSION_PAGE = /v\/[^/]+\/(index\.html)?$/;
+/** The site's root path (a version's own page sits at v/<version>/ under it). */
+const siteRoot = () => location.pathname.replace(VERSION_PAGE, '');
+/** A version's line, major.minor. A patch release never changes what a seed code makes (only the page around it), so
+ * a link or page on an older patch goes to the newest patch of its line; another line may make another game. */
+const lineOf = (v: string) => v.split('.').slice(0, 2).join('.');
+/** The newest released version of `v`'s line (versions.json is in release order), and where its page is. */
+const newestOfLine = (versions: string[], v: string) => versions.filter((x) => lineOf(x) === lineOf(v)).at(-1);
+const pageOf = (versions: string[], v: string) =>
+  v === versions.at(-1) ? siteRoot() : `${siteRoot()}v/${v}/index.html`;
+const releasedVersions = (): Promise<string[]> =>
+  fetch(`${siteRoot()}versions.json`)
+    .then((r) => (r.ok ? r.json() : []))
+    .catch(() => []);
 $('logo-version').textContent = `v${GENERATOR_VERSION}`;
 $('logo-version').title = `Logic version ${GENERATOR_VERSION}`;
 
@@ -277,12 +291,13 @@ function setSeed(code: string) {
   const reseed = $('reseed') as HTMLButtonElement;
   reseed.disabled = code === VANILLA_CODE;
   reseed.title = reseed.disabled ? 'Vanilla has nothing random to roll' : 'Roll a new seed (keeps the options)';
+  // (the seed only: a reload stays on this page's version, the latest at the root, the path's under v/. A shared link
+  // names the version too, seedLink)
   const url = new URL(location.href);
   url.searchParams.delete('v');
-  url.searchParams.delete('seed');
-  url.searchParams.set('v', GENERATOR_VERSION); // (the generator version: the same code makes another ROM on another version)
   url.searchParams.set('seed', code);
   history.replaceState(null, '', url);
+  ($('old-version-link') as HTMLAnchorElement).href = `${siteRoot()}?seed=${encodeURIComponent(code)}`;
 }
 /** Options the rest make moot (settings.ts `inertOptions`) show their vanilla value, disabled; the value they had comes
  * back once they matter again. */
@@ -404,13 +419,14 @@ const fromUrl = new URLSearchParams(location.search).get('seed'),
   linkVersion = new URLSearchParams(location.search).get('v');
 if (fromUrl && loadSeedCode(fromUrl)) {
   matchPreset();
-  // (a link from another generator version: the same code makes a different ROM here. A released version opens its
-  // own page (openLinkVersion); this says so meanwhile, and stays if that version isn't online)
-  if (linkVersion && linkVersion !== GENERATOR_VERSION) {
+  // (a link from another line of versions: the same code may make a different ROM here. A released one opens its
+  // line's page (openLinkVersion); this says so meanwhile, and stays if it isn't online. Another patch of this line
+  // makes the same game: nothing to say)
+  if (linkVersion && lineOf(linkVersion) !== lineOf(GENERATOR_VERSION)) {
     openLinkVersion(linkVersion, fromUrl);
     setStatus(
       seedStatus,
-      `This link was made with v${linkVersion}. This page is v${GENERATOR_VERSION}, so this seed makes a different game.`,
+      `This link was made with v${linkVersion}. This page is v${GENERATOR_VERSION}, so this seed may make a different game.`,
       'error',
     );
   }
@@ -679,22 +695,19 @@ try {
   // nothing remembered
 }
 /** Every released version stays online at v/<version>/ (versions.json at the site's root lists them): a link made by
- * another version opens that version's page, where its seed code makes the same game it did. */
+ * another line of versions opens the newest page of that line, where its seed code makes the same game it did. */
 function openLinkVersion(version: string, seed: string) {
-  if (/\/v\/[^/]+\/(index\.html)?$/.test(location.pathname)) return; // (already a version's own page)
-  fetch('versions.json')
-    .then((r) => (r.ok ? r.json() : []))
-    .then((versions: string[]) => {
-      // (the link as it came: this page has put its own version in the address bar since)
-      const v = encodeURIComponent(version);
-      if (versions.includes(version)) location.replace(`v/${v}/index.html?v=${v}&seed=${encodeURIComponent(seed)}`);
-    })
-    .catch(() => {});
+  if (VERSION_PAGE.test(location.pathname)) return; // (already a version's own page)
+  releasedVersions().then((versions) => {
+    const target = newestOfLine(versions, version);
+    if (target && target !== GENERATOR_VERSION)
+      location.replace(`${pageOf(versions, target)}?v=${encodeURIComponent(target)}&seed=${encodeURIComponent(seed)}`);
+  });
 }
 /** A link that opens the page on this seed code, with the generator version that makes its ROM. (A declaration: the remembered result is shown before this point.) */
 function seedLink(code: string) {
-  const root = location.pathname.replace(/v\/[^/]+\/(index\.html)?$/, ''); // (a version's own page: links from the root)
-  return `${location.origin}${root}?v=${encodeURIComponent(GENERATOR_VERSION)}&seed=${encodeURIComponent(code)}`;
+  // (a version's own page: links from the root, which sends them to their version)
+  return `${location.origin}${siteRoot()}?v=${encodeURIComponent(GENERATOR_VERSION)}&seed=${encodeURIComponent(code)}`;
 }
 /** A copy button: copies `text()` and says so on its label for a moment. */
 function copyButton(id: string, text: () => string, from: HTMLInputElement) {
@@ -712,3 +725,19 @@ function copyButton(id: string, text: () => string, from: HTMLInputElement) {
 }
 copyButton('copy-seed', () => seedInput.value, seedInput);
 copyButton('copy', () => shareInput.value, shareInput);
+
+// --- an older version's own page: a newer patch of its line takes over; an older line says so, with the latest ---
+if (VERSION_PAGE.test(location.pathname)) {
+  releasedVersions().then((versions) => {
+    const latest = versions.at(-1),
+      newest = newestOfLine(versions, GENERATOR_VERSION);
+    if (newest && newest !== GENERATOR_VERSION)
+      location.replace(`${pageOf(versions, newest)}?seed=${encodeURIComponent(seedInput.value)}`);
+    else if (latest && lineOf(latest) !== lineOf(GENERATOR_VERSION)) {
+      $('old-version-text').textContent =
+        `You're looking at v${GENERATOR_VERSION}, an older version kept online so its seed links still make the same games. ` +
+        `The latest is v${latest}: `;
+      $('old-version').hidden = false;
+    }
+  });
+}

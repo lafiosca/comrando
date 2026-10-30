@@ -86,7 +86,17 @@ main {
 .tagline {
   margin: 0;
   color: var(--muted);
-  max-width: 56ch;
+}
+.old-version {
+  margin: 0 0 16px;
+  padding: 10px 14px;
+  border: 1px solid var(--amber);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--fg);
+}
+.old-version a {
+  color: var(--accent);
 }
 .tagline + .tagline {
   margin-top: 10px;

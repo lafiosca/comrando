@@ -36,7 +36,8 @@ yarn build && node scripts/deploy.ts --bucket BUCKET --distribution CLOUDFRONT_I
 ```
 
 Every released version is a tagged commit here (`v0.24.0`, …). A seed code makes the same game on the same version,
-so to reproduce an old seed, build that tag.
+so to reproduce an old seed, build that tag. Patch releases (0.24.0 → 0.24.1) never change what a seed makes, so the
+site sends a link or page of an older patch to the newest one of its line; a minor or major release may.
 
 ## Develop
 
