@@ -369,7 +369,7 @@ export function openSimulator(seedCode: string, rom: Uint8Array, make: () => Sim
           ...g!.items.filter((i) => !st.owned.includes(i)).map(name),
           ...g!.areas.filter((m) => !st.cleared.includes(m)).map((m) => `Area ${m} cleared`),
         ];
-        mark.dataset.tip = `${a}-${b} road: needs ${gateNeed(g)}${missing.length < g!.items.length + g!.areas.length ? `\nStill needs ${list(missing)}` : ''}`;
+        mark.dataset.tip = `${a}-${b} path: needs ${gateNeed(g)}${missing.length < g!.items.length + g!.areas.length ? `\nStill needs ${list(missing)}` : ''}`;
         mark.setAttribute('role', 'img');
         mark.setAttribute('aria-label', mark.dataset.tip.replace(/\n/g, '. '));
         return mark;
@@ -464,7 +464,7 @@ export function openSimulator(seedCode: string, rom: Uint8Array, make: () => Sim
             : 'Dark area: the Flare would light it',
         st.owned.includes('flare') ? 'ok' : 'warn',
       ]);
-    if (sel === 0) facts.push(['Where the flight starts. Click any place the roads reach; travel is free.', 'ok']);
+    if (sel === 0) facts.push(['Where the flight starts. Click any place the paths reach; travel is free.', 'ok']);
     const heading = el('div', 'sim-place-head');
     heading.append(el('h3', '', placeName(sel)), el('span', 'sim-code', seen && p.layout ? `Layout O${p.layout}` : ''));
     const factList = el('ul', 'sim-facts');

@@ -113,7 +113,7 @@ import {
   zoneNode,
 } from './world.ts';
 
-export const GENERATOR_VERSION = '0.24.3';
+export const GENERATOR_VERSION = '0.24.4';
 
 /**
  * The spoiler file (spoiler.ts: data, not prose; the route is the visual spoiler's). Places are { area: map number,
