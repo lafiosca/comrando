@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { normalizeCosmetics } from '../src/core/cosmetics.ts';
+import { applyNoMusic } from '../src/core/patches/music.ts';
 import { CREDITS_HEADER, creditsText } from '../src/core/credits.ts';
 import { JOE_LETTERS, MISSION_REPORTS, SELF_DESTRUCTS, STILL_INSIDES } from '../src/core/bosses.ts';
 import { generate, logicDepth, planSeed } from '../src/core/generate.ts';
@@ -488,6 +489,16 @@ describe.skipIf(!HAVE_ROM)('with the real ROM', () => {
     expect(read(fixed, 0x72)).toBe("IS THAT SO, THAT'S VERY DISAPPOINTING.");
     expect(read(fixed, 0xec)).toContain('A SPECIAL MISSION*** TO RESCUE');
     expect(read(fixed, 0xd6)).toContain("BADDS' SE- CRET DOCUMENTS ABOUT"); // (hyphenated across lines)
+  });
+
+  it("music off is one byte, RTS at the sound engine's song start (0C:$8044); on leaves it", () => {
+    const rom = loadRom();
+    const patched = rom.slice();
+    applyNoMusic(patched);
+    expect([...patched.keys()].filter((i) => patched[i] !== rom[i])).toEqual([0x30054]);
+    expect(patched[0x30054]).toBe(0x60);
+    expect(generate(rom, code(3, { music: 'off' })).rom[0x30054]).toBe(0x60);
+    expect(generate(rom, code(3)).rom[0x30054]).toBe(0xa5);
   });
 
   it('enemy uniforms recolor only the enemy red in enemy sprite palettes and enemy close-ups', () => {

@@ -14,7 +14,7 @@ body:
       description: >-
         Copy Link on the page after generating (it carries the version and the seed code). Or the SEED and VERSION
         lines from the final screen.
-      placeholder: https://comrando.com/?v=0.24.4&seed=...
+      placeholder: https://comrando.com/?v=0.24.5&seed=...
     validations:
       required: true
   - type: textarea

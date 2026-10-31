@@ -119,6 +119,7 @@ const GROUPS: [string, string[]][] = [
       'trucks',
       'topDownDrops',
       'eagles',
+      'music',
       'health',
       'continues',
       'lives',
@@ -412,13 +413,16 @@ function loadSeedCode(code: string): boolean {
     return false;
   }
 }
-/** After loading a code: select Vanilla, Standard, Iron or Brute when the shown options are exactly that preset (moot ones aside). */
+/** After loading a code: select Vanilla, Standard, Iron or Brute when the shown options are exactly that preset (moot ones
+ * aside); otherwise the dots compare against the nearest of them (fewest options changed; Standard on a tie). */
 function matchPreset() {
-  const matches = (preset: Settings) =>
-    [...gameplayControls].every(([k, c]) => mootSaved.has(k) || c.get() === preset[k]);
-  const found = FIXED_PRESETS.find(([, , settings]) => matches(settings));
-  setBaseline(found?.[1] ?? 'Standard', found?.[2] ?? DEFAULT_SETTINGS);
-  selectPreset(found?.[0] ?? null);
+  const changed = (preset: Settings) =>
+    [...gameplayControls].filter(([k, c]) => !mootSaved.has(k) && c.get() !== preset[k]).length;
+  const [id, name, settings] = [...FIXED_PRESETS]
+    .map((p) => ({ p, n: changed(p[2]) - (p[2] === DEFAULT_SETTINGS ? 0.5 : 0) }))
+    .reduce((a, b) => (b.n < a.n ? b : a)).p;
+  setBaseline(name, settings);
+  selectPreset(changed(settings) ? null : id);
 }
 // A seed link (?v=…&seed=…) opens on its seed; the address bar is then left plain (the page never writes the seed
 // there: a reload starts afresh, below, and Copy Link makes a link). Otherwise the last options used in this browser,

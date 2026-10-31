@@ -18,6 +18,7 @@ import {
   EXTRA_COMM_LOCKS,
 } from './patches/locks.ts';
 import { oneBriefingMessage, skipRescueSpeech, oneLineWiretaps, oneRescueLine } from './patches/messages.ts';
+import { applyNoMusic } from './patches/music.ts';
 import { setLives, setNewGameState, unlimitedContinues } from './patches/newgame.ts';
 import { fixCommPageBoxes, setAreaClearReward } from './patches/rewards.ts';
 import {
@@ -113,7 +114,7 @@ import {
   zoneNode,
 } from './world.ts';
 
-export const GENERATOR_VERSION = '0.24.4';
+export const GENERATOR_VERSION = '0.24.5';
 
 /**
  * The spoiler file (spoiler.ts: data, not prose; the route is the visual spoiler's). Places are { area: map number,
@@ -527,7 +528,8 @@ function placeItems(rom: Uint8Array, seed: Seed) {
   if (settings.comms === 'shuffled') applyComms(rom, comms);
 }
 
-/** Gameplay fixes and options: weapons, darkness, turrets, door locks and comm flags, short messages, top-down stages. */
+/** Gameplay fixes and options: weapons, darkness, turrets, door locks and comm flags, short messages, top-down stages,
+ * the timer, the music. */
 function gameplayPatches(rom: Uint8Array, seed: Seed) {
   const { dark, extraLocks, settings } = seed;
   removeRoadGates(rom);
@@ -562,6 +564,7 @@ function gameplayPatches(rom: Uint8Array, seed: Seed) {
   else if (settings.eagles === 'oneup') eagleOneUps(rom);
   else if (settings.eagles === 'none') noEagles(rom);
   if (settings.timer === 'on') addFinalTimer(rom);
+  if (settings.music === 'off') applyNoMusic(rom);
 }
 
 /** The map's roads: the region gates (6-8, 8-10, the Flak Map), NZ15's barriers, trucks, travel speed. */

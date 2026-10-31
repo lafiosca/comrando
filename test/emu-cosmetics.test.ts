@@ -6,7 +6,7 @@ import { Emu, seedCode } from './emu.ts';
 import { HAVE_ROM, loadRom } from './rom-fixture.ts';
 import { clearOf } from './spoil.ts';
 
-// Cosmetics in the emulator: player colors, the title screen, the robot portrait.
+// Cosmetics in the emulator: player colors, the title screen, the robot portrait; and the Music option.
 
 const uniformNow = (emu: Emu) => emu.paletteByte(0x16);
 
@@ -146,4 +146,28 @@ describe.skipIf(!HAVE_ROM)('robot portrait in the emulator', () => {
     expect(talk({ d1Portrait: 'on' }, 0x1a, 6).index).toBe(1);
     expect(talk({ d1Portrait: 'off' }, 0x19, 5).index).toBe(0xff);
   }, 300_000);
+});
+
+describe.skipIf(!HAVE_ROM)('music off in the emulator', () => {
+  // the first area: its music plays in vanilla; firing the gun is a sound effect
+  const listen = (music: string) => {
+    const emu = new Emu(generate(loadRom(), seedCode(3, { music }), { cosmeticSeed: 'x' }).rom, {
+      sound: true,
+    });
+    expect(emu.bootToFirstArea()).toBe(true);
+    emu.run(120);
+    const quiet = emu.samples.length;
+    emu.run(120);
+    const area = emu.loudness(quiet);
+    const fired = emu.samples.length;
+    emu.press('B', 3, 12);
+    return { area, shot: emu.loudness(fired) };
+  };
+  it('silences the area music and keeps the gun sound', () => {
+    const on = listen('on'),
+      off = listen('off');
+    expect(on.area).toBeGreaterThan(0.02);
+    expect(off.area).toBeLessThan(0.002);
+    expect(off.shot).toBeGreaterThan(0.01);
+  }, 60_000);
 });

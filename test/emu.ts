@@ -27,9 +27,15 @@ type Button = keyof typeof BUTTONS;
 export class Emu {
   readonly nes: NES;
   frame = 0;
+  /** Audio samples (left channel), collected only when constructed with `sound`. */
+  readonly samples: number[] = [];
 
-  constructor(rom: Uint8Array) {
-    this.nes = new NES({ onFrame: () => {}, onAudioSample: () => {}, emulateSound: false });
+  constructor(rom: Uint8Array, { sound = false } = {}) {
+    this.nes = new NES({
+      onFrame: () => {},
+      onAudioSample: sound ? (l: number) => this.samples.push(l) : () => {},
+      emulateSound: sound,
+    });
     let bin = '';
     for (const b of rom) bin += String.fromCharCode(b);
     this.nes.loadROM(bin);
@@ -51,6 +57,11 @@ export class Emu {
   }
   peek(addr: number): number {
     return (this.nes as unknown as NesInternals).cpu.mem[addr];
+  }
+  /** Loudness (RMS) of the audio from sample `from` on (with `sound`). */
+  loudness(from = 0): number {
+    const s = this.samples.slice(from);
+    return s.length ? Math.sqrt(s.reduce((t, v) => t + v * v, 0) / s.length) : 0;
   }
   /** PPU VRAM byte (pattern tables $0000-$1FFF, nametables $2000+). */
   vram(addr: number): number {

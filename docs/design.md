@@ -71,6 +71,7 @@ Every option and its values, in the order the page shows them. Defaults are the 
 | Top-Down Eagles | Continue, 1-UP, Nothing | 1-UP |
 | Boss Turrets | Vanilla, Destructible | Destructible |
 | Comm Locks | Vanilla, More (2-3 more), Most | More |
+| Background Music | Off (no background music; sound effects kept), On | On |
 
 **Presets:**
 - **Vanilla**: every option as the original game plays.
@@ -83,7 +84,7 @@ Every option and its values, in the order the page shows them. Defaults are the 
   - Top-Down Eagles Continue; Boss Turrets Vanilla
   - Comm Locks Most
 - **Brute**: Iron with Nonsense hints, Top-Down Eagles Nothing, Top-Down Drops Off and 1x map speed.
-- **Chaos**: every option at random, rerolled until a beatable seed comes out.
+- **Chaos**: every option at random (Background Music stays On), rerolled until a beatable seed comes out.
 
 A loaded seed code whose options match a preset selects that preset.
 

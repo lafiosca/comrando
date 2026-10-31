@@ -428,6 +428,16 @@ export const GAMEPLAY_SCHEMA: readonly OptionSchema[] = [
     ],
     default: 'more',
   },
+  {
+    key: 'music',
+    label: 'Background Music',
+    caption: 'Background music played in levels and map',
+    values: ['off', 'on'],
+    valueLabels: ['Off', 'On'],
+    valueInfo: ['No background music; sound effects still play', "The game's music plays"],
+    default: 'on',
+    vanilla: 'on',
+  },
 ];
 
 export const DEFAULT_SETTINGS: Settings = Object.fromEntries(
@@ -545,10 +555,11 @@ export function blockers(s: Settings, key: string): string[] {
   ];
 }
 
-/** Preset "Chaos": every option at random (no conflicting combination); options the rest make moot stay vanilla. */
+/** Preset "Chaos": every option at random (no conflicting combination); options the rest make moot stay vanilla. Music
+ * stays on (a listening preference, not part of the game to roll). */
 export function chaosSettings(): Settings {
   for (;;) {
-    const s = randomSettings();
+    const s: Settings = { ...randomSettings(), music: 'on' };
     for (const k of inertOptions(s).keys()) s[k] = VANILLA_SETTINGS[k];
     if (!conflicts(s).length && [...inertOptions(s).keys()].every((k) => s[k] === VANILLA_SETTINGS[k])) return s;
   }

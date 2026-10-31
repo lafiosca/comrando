@@ -25,7 +25,7 @@ Contents: [Memory map](#memory-map) · [Banks and free space](#banks-and-free-sp
 [Super Joe](#super-joe) · [Weapons and fire](#weapons-and-fire) · [Top-down stages](#top-down-stages) ·
 [Turrets](#turrets) · [Bosses](#bosses) · [Ending](#ending) · [Timer](#timer) · [New game, lives and continues](#new-game-lives-and-continues) ·
 [Palettes and cosmetics](#palettes-and-cosmetics) · [Portraits](#portraits) · [Title screen](#title-screen) ·
-[Shared routines](#shared-routines)
+[Sound](#sound) · [Shared routines](#shared-routines)
 
 ## Memory map
 
@@ -753,6 +753,19 @@ shading); group 3 = `26 35 06 | 30 35 26 | 26 35 17 | 26 35 18` (`$06` is Ladd's
 Screens are drawn by 0F:`$D73F` (→ `$E198`; pointer table 0F:`$E1E1` by Y: `[PPU hi, lo, ctrl, data]`, ctrl bit 6 = a
 run). The title font is BG tiles `$C4`-`$E1` (CHR record `$0D`, file 0x1C010, loaded by list `$6E` from the title
 0F:`$C75C` and game over 0F:`$C9F2`), 7 px letters, plane 0 only. Its O (tile `$CD`) is a narrow zero.
+
+## Sound
+
+`LDY #n / JSR $D754` (0F:`$E5A6`) maps bank 0C and calls `$8003` with A = n. `$FC`-`$FF` are commands (`$FE` stops the
+sound effects, `$FF` the music); any other n reads pointer 0C:`$8A50` + 2n, whose first byte is the header. A header
+with a low nibble (`$0F` in every one) is a song: 0C:`$8044` compares that priority with the playing song's (`$00`
+low nibble) and starts it. One with only a high nibble is a sound effect (0C:`$80BB`, priority in `$00`'s high nibble).
+Songs are `$00`-`$0F` and `$40`-`$44`, sound effects `$10`-`$3F`. Areas pick their song from a table; the fixed
+requests (title, ending `$0F`/`$44`, boss talk `$40`, …) are fire-and-forget, each scene running on its own timer.
+
+Music Off (option Music, patches/music.ts) puts `RTS` at 0C:`$8044`: no song starts, sound effects play as before. Checked in jsnes:
+the same game state frame for frame, area music silent, the gun's sound kept, and every emulator test passing with
+it on (the ending included).
 
 ## Shared routines
 
